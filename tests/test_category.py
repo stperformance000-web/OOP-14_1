@@ -13,7 +13,7 @@ def products_list():
 
 
 def test_category_init(products_list):
-    """Тест корректности初始化 объекта Category."""
+    """Тест корректности инициализации объекта Category."""
     Category.category_count = 0
     Category.product_count = 0
 
@@ -21,7 +21,17 @@ def test_category_init(products_list):
 
     assert category.name == "Смартфоны"
     assert category.description == "Электронные гаджеты"
-    assert len(category.products) == 2
+    assert len(category.products_list) == 2
+
+
+def test_category_products_getter(products_list):
+    """Тест геттера products, который возвращает строку по шаблону ТЗ."""
+    category = Category("Смартфоны", "Гаджеты", products_list)
+    expected_output = (
+        "Samsung Galaxy C23 Ultra, 180000.0 руб. Остаток: 5 шт.\n"
+        "Iphone 15 Pro, 210000.5 руб. Остаток: 3 шт.\n"
+    )
+    assert category.products == expected_output
 
 
 def test_category_counters(products_list):
@@ -49,7 +59,5 @@ def test_load_data_from_json():
     assert categories[0].name == "Смартфоны"
     assert categories[1].name == "Телевизоры"
 
-    assert len(categories[0].products) == 3
-    assert len(categories[1].products) == 1
-
-    assert categories[0].products[0].name == "Samsung Galaxy C23 Ultra"
+    assert len(categories[0].products_list) == 3
+    assert len(categories[1].products_list) == 1

@@ -5,7 +5,7 @@ from src.product import Product
 
 
 def load_data_from_json(file_path: str) -> list[Category]:
-    """Загружает данные из JSON файла и возвращает список объектов Category."""
+    """Загружает данные из JSON файла с использованием защищенных методов."""
     if not os.path.exists(file_path):
         return []
 
@@ -16,12 +16,8 @@ def load_data_from_json(file_path: str) -> list[Category]:
     for category_data in data:
         products = []
         for product_data in category_data.get("products", []):
-            product = Product(
-                name=product_data["name"],
-                description=product_data["description"],
-                price=product_data["price"],
-                quantity=product_data["quantity"]
-            )
+            # Создаем продукт через класс-метод
+            product = Product.new_product(product_data)
             products.append(product)
 
         category = Category(
