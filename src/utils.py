@@ -5,7 +5,7 @@ from src.product import Product
 
 
 def load_data_from_json(file_path: str) -> list[Category]:
-    """Загружает данные из JSON файла и возвращает список объектов Category."""
+    """Загружает данные из JSON файла с использованием защищенных методов."""
     if not os.path.exists(file_path):
         return []
 
@@ -16,12 +16,7 @@ def load_data_from_json(file_path: str) -> list[Category]:
     for category_data in data:
         products = []
         for product_data in category_data.get("products", []):
-            product = Product(
-                name=product_data["name"],
-                description=product_data["description"],
-                price=product_data["price"],
-                quantity=product_data["quantity"]
-            )
+            product = Product.new_product(product_data)
             products.append(product)
 
         category = Category(
@@ -32,3 +27,22 @@ def load_data_from_json(file_path: str) -> list[Category]:
         categories.append(category)
 
     return categories
+
+
+class ProductIterator:
+    """Вспомогательный класс для итерации по продуктам категории."""
+
+    def __init__(self, category) -> None:
+        self.products = category.products_list
+        self.index = 0
+
+    def __iter__(self) -> "ProductIterator":
+        return self
+
+    def __next__(self):
+        if self.index < len(self.products):
+            product = self.products[self.index]
+            self.index += 1
+            return product
+        else:
+            raise StopIteration
