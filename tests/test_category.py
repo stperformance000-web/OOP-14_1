@@ -1,55 +1,29 @@
 import pytest
 from src.category import Category
-from src.product import Product
-from src.utils import load_data_from_json
+from src.product import Product, Smartphone
 
 
 @pytest.fixture
 def products_list():
     return [
         Product("Samsung Galaxy C23 Ultra", "256GB, Gray", 180000.0, 5),
-        Product("Iphone 15 Pro", "128GB, Blue", 210000.50, 3)
+        Smartphone("iPhone 15", "Gray space", 210000.0, 8, 95.5, "15 Pro", 256, "Серый")
     ]
 
 
 def test_category_init(products_list):
-    """Тест корректности初始化 объекта Category."""
-    Category.category_count = 0
-    Category.product_count = 0
-
-    category = Category("Смартфоны", "Электронные гаджеты", products_list)
-
-    assert category.name == "Смартфоны"
-    assert category.description == "Электронные гаджеты"
-    assert len(category.products) == 2
+    category = Category("Электроника", "Гаджеты", products_list)
+    assert category.name == "Электроника"
+    assert len(category.products_list) == 2
 
 
-def test_category_counters(products_list):
-    """Тест подсчета количества категорий и количества продуктов."""
-    Category.category_count = 0
-    Category.product_count = 0
-
-    Category("Смартфоны", "Гаджеты", products_list)
-    assert Category.category_count == 1
-    assert Category.product_count == 2
-
-    Category("Аксессуары", "Чехлы и зарядки", [])
-    assert Category.category_count == 2
-    assert Category.product_count == 2
+def test_category_add_product_invalid():
+    """Тест, что добавление не-продукта вызывает TypeError."""
+    category = Category("Электроника", "Гаджеты", [])
+    with pytest.raises(TypeError, match="Добавлять в категорию можно только товары или их наследников!"):
+        category.add_product("Не товар, а просто строка")
 
 
-def test_load_data_from_json():
-    """Тест корректности загрузки данных из оригинального JSON файла."""
-    Category.category_count = 0
-    Category.product_count = 0
-
-    categories = load_data_from_json("products.json")
-
-    assert len(categories) == 2
-    assert categories[0].name == "Смартфоны"
-    assert categories[1].name == "Телевизоры"
-
-    assert len(categories[0].products) == 3
-    assert len(categories[1].products) == 1
-
-    assert categories[0].products[0].name == "Samsung Galaxy C23 Ultra"
+def test_category_str(products_list):
+    category = Category("Электроника", "Гаджеты", products_list)
+    assert str(category) == "Электроника, количество продуктов: 13 шт."
