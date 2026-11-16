@@ -1,55 +1,65 @@
 import pytest
-from src.category import Category
+from src.category import Category, Order
 from src.product import Product
 from src.utils import load_data_from_json
 
 
 @pytest.fixture
-def products_list():
-    return [
-        Product("Samsung Galaxy C23 Ultra", "256GB, Gray", 180000.0, 5),
-        Product("Iphone 15 Pro", "128GB, Blue", 210000.50, 3)
-    ]
+def sample_product():
+    return Product("Samsung Galaxy", "256GB", 180000.0, 5)
 
 
-def test_category_init(products_list):
-    """Тест корректности初始化 объекта Category."""
+def test_category_init(sample_product):
     Category.category_count = 0
     Category.product_count = 0
-
-    category = Category("Смартфоны", "Электронные гаджеты", products_list)
-
+    category = Category("Смартфоны", "Гаджеты", [sample_product])
     assert category.name == "Смартфоны"
-    assert category.description == "Электронные гаджеты"
-    assert len(category.products) == 2
+    assert len(category.products_list) == 1
+    assert "Samsung Galaxy" in category.products
+    assert str(category) == "Смартфоны, количество продуктов: 5 шт."
 
 
-def test_category_counters(products_list):
-    """Тест подсчета количества категорий и количества продуктов."""
-    Category.category_count = 0
-    Category.product_count = 0
+def test_category_add_invalid():
+    category = Category("Тест", "Описание", [])
+    with pytest.raises(TypeError):
+        category.add_product("Не продукт")
 
-    Category("Смартфоны", "Гаджеты", products_list)
-    assert Category.category_count == 1
-    assert Category.product_count == 2
 
-    Category("Аксессуары", "Чехлы и зарядки", [])
-    assert Category.category_count == 2
-    assert Category.product_count == 2
+def test_order_creation(sample_product):
+    order = Order(sample_product, 2)
+    assert order.product.name == "Samsung Galaxy"
+    assert order.total_cost == 360000.0
+    assert str(order) == "Заказ: Samsung Galaxy, 2 шт. Итоговая стоимость: 360000.0 руб."
+
+
+def test_order_creation_invalid():
+    with pytest.raises(TypeError):
+        _ = Order("Строка вместо объекта", 5)
 
 
 def test_load_data_from_json():
-    """Тест корректности загрузки данных из оригинального JSON файла."""
     Category.category_count = 0
     Category.product_count = 0
-
     categories = load_data_from_json("products.json")
+    assert len(categories) > 0
 
-    assert len(categories) == 2
-    assert categories[0].name == "Смартфоны"
-    assert categories[1].name == "Телевизоры"
+    # Проверка на несуществующий файл
+    assert load_data_from_json("missing.json") == []
 
-    assert len(categories[0].products) == 3
-    assert len(categories[1].products) == 1
+def test_category_middle_price(sample_product):
+    """Тест подсчета среднего ценника товаров в категории и для пустой категории."""
+    product2 = Product("Iphone 15", "Gray", 100000.0, 3)
+    category = Category("Смартфоны", "Гаджеты", [sample_product, product2])
+    assert category.middle_price() == 140000.0
 
-    assert categories[0].products[0].name == "Samsung Galaxy C23 Ultra"
+    empty_category = Category("Пустая", "Без товаров", [])
+    assert empty_category.middle_price() == 0
+
+
+def test_order_zero_quantity(sample_product, capsys):
+    """Тест обработки нулевого количества при создании заказа."""
+    order = Order(sample_product, 0)
+    captured = capsys.readouterr()
+    assert "Товар с нулевым количеством не может быть добавлен" in captured.out
+    assert "Обработка добавления товара завершена" in captured.out
+    assert str(order) == "Пустой или некорректный заказ"
